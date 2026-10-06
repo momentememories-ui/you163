@@ -8,8 +8,8 @@
     <style>
         body {
             margin: 0; padding: 0;
-            /* แก้ไข: ล็อกพื้นหลังphoto11.png ห้ามขยับ ห้ามเลื่อน ป้องกันการไถหน้าจอ */
-            background: url('photo11.png') no-repeat center center fixed;
+            /* แก้ไข: เปลี่ยนรูปพื้นหลังเป็น photo11.jpg และล็อกไม่ให้ขยับ */
+            background: url('photo11.jpg') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Prompt', sans-serif;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -50,7 +50,6 @@
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* เพิ่มเติม: อนิเมชันสำหรับสั่นช่อดอกไม้เพื่อดึงดูดสายตา */
         @keyframes bouquetWobble {
             0% { transform: scale(1) rotate(0deg); }
             25% { transform: scale(1.05) rotate(-4deg); }
@@ -138,15 +137,17 @@
             transform-origin: center center;
         }
 
+        /* ปรับปรุงอนิเมชันให้ลอยขึ้นแบบสุ่มองศาและการลอย */
         .pop-emoji {
             position: fixed; pointer-events: none; z-index: 350; font-size: 24px;
             animation: floatUpEmoji 2.5s ease-out forwards; opacity: 0;
+            bottom: -30px;
         }
         @keyframes floatUpEmoji {
-            0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translateY(-10vh) translateX(var(--x-move)) scale(1.2); opacity: 0; }
+            0% { transform: translateY(0) translateX(0) scale(0.6) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.9; }
+            85% { opacity: 0.9; }
+            100% { transform: translateY(-110vh) translateX(var(--x-move)) scale(1.2) rotate(var(--rot)); opacity: 0; }
         }
     </style>
 </head>
@@ -234,7 +235,7 @@
             count++;
             
             if (count <= 20) {
-                statusText.innerText = `เย้! ได้น้ำจากเธอแล้วเริ่มโตเลย (${count}%)`;
+                statusText.innerText = `เย้! ได้รับน้ำจากเธอแล้วเริ่มโตเลย (${count}%)`;
             } else if (count <= 40) {
                 statusText.innerText = `ขอบคุณที่ตั้งใจเลี้ยงดูแลอย่างดีนะ (${count}%)`;
             } else if (count <= 60) {
@@ -276,7 +277,6 @@
                 plantImg.style.transform = "scale(0.3)"; 
                 plantImg.src = 'bouquet.png'; 
                 
-                /* เริ่มขยับ/สั่นช่อดอกไม้ดึงดูดสายตา */
                 setTimeout(() => {
                     plantImg.classList.add('wobble-active');
                 }, 100);
@@ -291,7 +291,6 @@
                     plantImg.onclick = () => {
                         bgMusic.play().catch(e => console.log("Music play blocked"));
                         
-                        /* หยุดสั่นช่อดอกไม้ทันทีที่ผู้ใช้คลิกเปิด */
                         plantImg.classList.remove('wobble-active');
                         plantImg.style.transform = "scale(1) rotate(0deg)";
                         explode();
@@ -309,7 +308,7 @@
                 {x: -120, y: -50},                   {x: 120, y: -50}, 
                 {x: -120, y: 40},                    {x: 120, y: 40},  
                 {x: -110, y: 130},  {x: 0, y: 150},  {x: 110, y: 130}, 
-                {x: 0, y: -40}                                         
+                {x: 0, y: -40}                                          
             ];
 
             for (let i = positions.length - 1; i > 0; i--) {
@@ -331,7 +330,6 @@
                 const finalX = pos.x + jitterX;
                 const finalY = pos.y + jitterY;
                 
-                /* บังคับสุ่มมุมเอียงภาพ (-18 ถึง +18 องศา) เพื่อให้เด้งออกมาเอียงไม่เป็นระเบียบ */
                 const rotate = (Math.random() - 0.5) * 36;
 
                 setTimeout(() => {
@@ -369,15 +367,20 @@
                 const el = document.createElement('div');
                 el.className = 'pop-emoji';
                 el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-                el.style.left = (Math.random() * 80 + 10) + 'vw';
-                el.style.setProperty('--x-move', ((Math.random() - 0.5) * 100) + 'px');
-                el.style.animationDelay = '0s';
+                
+                /* ปรับปรุง: สุ่มตำแหน่งตามแนวนอนตั้งแต่ 5vw ถึง 95vw กระจายทั่วทั้งหน้าจอ */
+                el.style.left = (Math.random() * 90 + 5) + 'vw';
+                
+                /* สุ่มทิศทางการเคลื่อนที่และมุมหมุน */
+                el.style.setProperty('--x-move', ((Math.random() - 0.5) * 120) + 'px');
+                el.style.setProperty('--rot', ((Math.random() - 0.5) * 360) + 'deg');
+                
                 container.appendChild(el);
                 setTimeout(() => el.remove(), 2500);
             }
             
-            for(let i=0; i<6; i++) setTimeout(spawn, Math.random() * 300);
-            emojiInterval = setInterval(spawn, 400);
+            for(let i=0; i<8; i++) setTimeout(spawn, Math.random() * 300);
+            emojiInterval = setInterval(spawn, 300);
         }
 
         function stopEmojiBurst() {
