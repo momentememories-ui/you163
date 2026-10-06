@@ -36,7 +36,6 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        /* ปรับปรุง: อิโมจิฉากหน้า ลอยขึ้นมาจากขอบล่างตลอดเวลา ไม่นิ่งค้างกลางจอ */
         .butterfly {
             position: fixed; 
             bottom: -30px;
@@ -139,6 +138,7 @@
             position: absolute;
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             transform-origin: center center;
+            border-radius: 6px;
         }
         .view-card img { width: 100%; height: auto; display: block; margin-bottom: 12px; border-radius: 2px; }
         .view-caption { text-align: center; color: #444; font-size: 0.85rem; font-weight: 600; }
@@ -161,16 +161,50 @@
             justify-content: center; align-items: center; z-index: 400;
             transition: background-color 0.5s ease;
         }
-        #note-img-display {
-            width: 95%; 
-            max-width: 450px; 
-            height: auto;
+        
+        .note-wrapper {
             position: absolute;
+            width: 95%;
+            max-width: 450px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             transform-origin: center center;
         }
 
-        /* อิโมจิตอนเปิดดูรูปภาพ/โน้ต บินลอยขึ้นมาทันที */
+        #note-img-display {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* สไตล์ปุ่มปิด (✕) */
+        .close-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 32px;
+            height: 32px;
+            background: #ffebee;
+            color: #5d4037;
+            border: 2px solid #ffcdd2;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            z-index: 450;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .close-btn:active {
+            transform: scale(0.9);
+            background: #ffcdd2;
+        }
+
         .pop-emoji {
             position: fixed; 
             pointer-events: none; 
@@ -214,15 +248,21 @@
 
     <img id="box-btn" src="box.png" onclick="openNote(this)">
 
+    <!-- Pop-up รูปภาพ พร้อมปุ่มปิด -->
     <div id="photo-viewer" onclick="closePhoto()">
         <div id="active-view-card" class="view-card" onclick="event.stopPropagation()">
+            <div class="close-btn" onclick="closePhoto()">✕</div>
             <img id="view-img" src="">
             <div id="view-caption" class="view-caption"></div>
         </div>
     </div>
 
+    <!-- Pop-up จดหมาย/โน้ต พร้อมปุ่มปิด -->
     <div id="overlay" onclick="closeNote()">
-        <img id="note-img-display" src="note.png" onclick="event.stopPropagation()">
+        <div id="note-wrapper" class="note-wrapper" onclick="event.stopPropagation()">
+            <div class="close-btn" onclick="closeNote()">✕</div>
+            <img id="note-img-display" src="note.png">
+        </div>
     </div>
 
     <script>
@@ -237,7 +277,6 @@
             }, { once: true });
         });
 
-        /* แก้ไขฟังก์ชัน: ให้สร้างอิโมจิที่ลอยขึ้นมาจากด้านล่างตลอดเวลา */
         function createButterflies() {
             const emojis = ['💗', '🌸'];
             for(let i=0; i<12; i++) {
@@ -245,16 +284,12 @@
                 b.className = 'butterfly';
                 b.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
                 
-                // กระจายแนวนอนทั่วจอ
                 b.style.left = (Math.random() * 90 + 5) + 'vw';
-                
-                // สุ่มการสไลด์เอียงและการหมุน
                 b.style.setProperty('--drift', ((Math.random() - 0.5) * 120) + 'px');
                 b.style.setProperty('--spin', ((Math.random() - 0.5) * 360) + 'deg');
                 
-                // สุ่มเวลาอนิเมชันเพื่อไม่ให้ขึ้นพร้อมกัน
-                const speed = 6 + Math.random() * 5; // 6 ถึง 11 วินาที
-                const delay = Math.random() * 6; // เหลื่อมเวลา 0 ถึง 6 วินาที
+                const speed = 6 + Math.random() * 5;
+                const delay = Math.random() * 6;
                 
                 b.style.setProperty('--speed', speed + 's');
                 b.style.animationDelay = delay + 's';
@@ -504,27 +539,27 @@
         function openNote(element) {
             currentOriginElement = element;
             const overlay = document.getElementById('overlay');
-            const noteDisplay = document.getElementById('note-img-display');
+            const noteWrapper = document.getElementById('note-wrapper');
             
             const rect = element.getBoundingClientRect();
             const startLeft = rect.left + (rect.width / 2);
             const startTop = rect.top + (rect.height / 2);
             
-            noteDisplay.style.transition = 'none';
-            noteDisplay.style.left = startLeft + 'px';
-            noteDisplay.style.top = startTop + 'px';
-            noteDisplay.style.transform = 'translate(-50%, -50%) scale(0.1)';
-            noteDisplay.style.opacity = '0';
+            noteWrapper.style.transition = 'none';
+            noteWrapper.style.left = startLeft + 'px';
+            noteWrapper.style.top = startTop + 'px';
+            noteWrapper.style.transform = 'translate(-50%, -50%) scale(0.1)';
+            noteWrapper.style.opacity = '0';
             
             overlay.style.display = 'flex';
             
             setTimeout(() => {
                 overlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
-                noteDisplay.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                noteDisplay.style.left = '50%';
-                noteDisplay.style.top = '50%';
-                noteDisplay.style.transform = 'translate(-50%, -50%) scale(1)';
-                noteDisplay.style.opacity = '1';
+                noteWrapper.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                noteWrapper.style.left = '50%';
+                noteWrapper.style.top = '50%';
+                noteWrapper.style.transform = 'translate(-50%, -50%) scale(1)';
+                noteWrapper.style.opacity = '1';
                 startEmojiBurst();
             }, 20);
         }
@@ -532,7 +567,7 @@
         function closeNote() {
             stopEmojiBurst();
             const overlay = document.getElementById('overlay');
-            const noteDisplay = document.getElementById('note-img-display');
+            const noteWrapper = document.getElementById('note-wrapper');
             
             if (currentOriginElement) {
                 const rect = currentOriginElement.getBoundingClientRect();
@@ -540,10 +575,10 @@
                 const endTop = rect.top + (rect.height / 2);
                 
                 overlay.style.backgroundColor = 'rgba(0,0,0,0)';
-                noteDisplay.style.left = endLeft + 'px';
-                noteDisplay.style.top = endTop + 'px';
-                noteDisplay.style.transform = 'translate(-50%, -50%) scale(0.1)';
-                noteDisplay.style.opacity = '0';
+                noteWrapper.style.left = endLeft + 'px';
+                noteWrapper.style.top = endTop + 'px';
+                noteWrapper.style.transform = 'translate(-50%, -50%) scale(0.1)';
+                noteWrapper.style.opacity = '0';
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
