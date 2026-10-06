@@ -6,17 +6,34 @@
     <title>Happy Anniversary💗</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        body {
+        /* ล็อกการเลื่อนของหน้าจอ */
+        html, body {
             margin: 0; padding: 0;
-            /* แก้ไข: เปลี่ยนรูปพื้นหลังเป็น photo11.jpg และล็อกไม่ให้ขยับ */
-            background: url('photo11.jpg') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Prompt', sans-serif;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
+            width: 100%; height: 100%;
+            overflow: hidden;
             touch-action: none;
             user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Prompt', sans-serif;
             position: relative;
+        }
+
+        /* ล็อกพื้นหลังphoto11.jpg ให้อยู่กับที่ 100% ไม่ขยับตามการสัมผัสหรือเจอร์สเจอร์ */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: url('photo11.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            pointer-events: none;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
         .butterfly {
@@ -137,17 +154,31 @@
             transform-origin: center center;
         }
 
-        /* ปรับปรุงอนิเมชันให้ลอยขึ้นแบบสุ่มองศาและการลอย */
+        /* อิโมจิลอยขึ้นทันที ไม่อยู่นิ่งกลางจอ */
         .pop-emoji {
-            position: fixed; pointer-events: none; z-index: 350; font-size: 24px;
-            animation: floatUpEmoji 2.5s ease-out forwards; opacity: 0;
-            bottom: -30px;
+            position: fixed; 
+            pointer-events: none; 
+            z-index: 350; 
+            font-size: 24px;
+            bottom: -40px;
+            will-change: transform, opacity;
+            animation: floatUpStraight 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-        @keyframes floatUpEmoji {
-            0% { transform: translateY(0) translateX(0) scale(0.6) rotate(0deg); opacity: 0; }
-            15% { opacity: 0.9; }
-            85% { opacity: 0.9; }
-            100% { transform: translateY(-110vh) translateX(var(--x-move)) scale(1.2) rotate(var(--rot)); opacity: 0; }
+        @keyframes floatUpStraight {
+            0% { 
+                transform: translateY(0) translateX(0) scale(0.6) rotate(0deg); 
+                opacity: 0; 
+            }
+            10% { 
+                opacity: 0.95; 
+            }
+            80% { 
+                opacity: 0.85; 
+            }
+            100% { 
+                transform: translateY(-115vh) translateX(var(--x-move)) scale(1.2) rotate(var(--rot)); 
+                opacity: 0; 
+            }
         }
     </style>
 </head>
@@ -182,7 +213,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             const music = document.getElementById('bg-music');
             music.play().catch(e => {
-                console.log("Autoplay บล็อกชั่วคราว รอการสัมผัสแรกจากผู้ใช้เพื่อความปลอดภัยของระบบเสียงเบราว์เซอร์");
+                console.log("Autoplay blocked until user interaction");
             });
             
             document.body.addEventListener('pointerdown', () => {
@@ -357,6 +388,7 @@
         let currentOriginElement = null;
         let emojiInterval = null;
 
+        /* ฟังก์ชันส่งอิโมจิขึ้นลอยทันทีจากด้านล่าง กระจายเต็มความกว้าง */
         function startEmojiBurst() {
             const container = document.getElementById('photo-viewer').style.display === 'flex' ? 
                 document.getElementById('photo-viewer') : document.getElementById('overlay');
@@ -368,19 +400,22 @@
                 el.className = 'pop-emoji';
                 el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
                 
-                /* ปรับปรุง: สุ่มตำแหน่งตามแนวนอนตั้งแต่ 5vw ถึง 95vw กระจายทั่วทั้งหน้าจอ */
+                // กระจายแนวนอนทั่วจอ 5vw - 95vw
                 el.style.left = (Math.random() * 90 + 5) + 'vw';
                 
-                /* สุ่มทิศทางการเคลื่อนที่และมุมหมุน */
-                el.style.setProperty('--x-move', ((Math.random() - 0.5) * 120) + 'px');
+                // สุ่มระยะและทิศทางการลอยเฉียง
+                el.style.setProperty('--x-move', ((Math.random() - 0.5) * 100) + 'px');
                 el.style.setProperty('--rot', ((Math.random() - 0.5) * 360) + 'deg');
                 
                 container.appendChild(el);
-                setTimeout(() => el.remove(), 2500);
+                setTimeout(() => el.remove(), 2200);
             }
             
-            for(let i=0; i<8; i++) setTimeout(spawn, Math.random() * 300);
-            emojiInterval = setInterval(spawn, 300);
+            // ส่งอิโมจิชุดแรกขึ้นทันที ไม่ให้หยุดนิ่ง
+            for(let i=0; i<6; i++) {
+                setTimeout(spawn, i * 120);
+            }
+            emojiInterval = setInterval(spawn, 250);
         }
 
         function stopEmojiBurst() {
