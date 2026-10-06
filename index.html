@@ -18,7 +18,7 @@
             position: relative;
         }
 
-        /* ล็อกพื้นหลังphoto11.jpg ให้อยู่กับที่ 100% ไม่ขยับตามการสัมผัสหรือเจอร์สเจอร์ */
+        /* ล็อกพื้นหลังphoto11.jpg ให้อยู่กับที่ 100% ไม่ขยับตามการสัมผัส */
         body::before {
             content: "";
             position: fixed;
@@ -36,16 +36,32 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
+        /* ปรับปรุง: อิโมจิฉากหน้า ลอยขึ้นมาจากขอบล่างตลอดเวลา ไม่นิ่งค้างกลางจอ */
         .butterfly {
-            position: absolute; width: 20px; height: 20px;
-            pointer-events: none; z-index: 1; font-size: 20px;
-            animation: flying 12s linear infinite;
+            position: fixed; 
+            bottom: -30px;
+            pointer-events: none; 
+            z-index: 1; 
+            font-size: 22px;
+            will-change: transform, opacity;
+            animation: floatUpScreen var(--speed) linear infinite;
         }
-        @keyframes flying {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translate(400px, -500px) rotate(360deg); opacity: 0; }
+
+        @keyframes floatUpScreen {
+            0% { 
+                transform: translateY(0) translateX(0) rotate(0deg); 
+                opacity: 0; 
+            }
+            15% { 
+                opacity: 0.8; 
+            }
+            85% { 
+                opacity: 0.8; 
+            }
+            100% { 
+                transform: translateY(-115vh) translateX(var(--drift)) rotate(var(--spin)); 
+                opacity: 0; 
+            }
         }
 
         #status-text { 
@@ -154,7 +170,7 @@
             transform-origin: center center;
         }
 
-        /* อิโมจิลอยขึ้นทันที ไม่อยู่นิ่งกลางจอ */
+        /* อิโมจิตอนเปิดดูรูปภาพ/โน้ต บินลอยขึ้นมาทันที */
         .pop-emoji {
             position: fixed; 
             pointer-events: none; 
@@ -221,15 +237,28 @@
             }, { once: true });
         });
 
+        /* แก้ไขฟังก์ชัน: ให้สร้างอิโมจิที่ลอยขึ้นมาจากด้านล่างตลอดเวลา */
         function createButterflies() {
             const emojis = ['💗', '🌸'];
             for(let i=0; i<12; i++) {
                 const b = document.createElement('div');
                 b.className = 'butterfly';
                 b.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-                b.style.left = Math.random() * 90 + 'vw';
-                b.style.top = Math.random() * 90 + 'vh';
-                b.style.animationDelay = Math.random() * 5 + 's';
+                
+                // กระจายแนวนอนทั่วจอ
+                b.style.left = (Math.random() * 90 + 5) + 'vw';
+                
+                // สุ่มการสไลด์เอียงและการหมุน
+                b.style.setProperty('--drift', ((Math.random() - 0.5) * 120) + 'px');
+                b.style.setProperty('--spin', ((Math.random() - 0.5) * 360) + 'deg');
+                
+                // สุ่มเวลาอนิเมชันเพื่อไม่ให้ขึ้นพร้อมกัน
+                const speed = 6 + Math.random() * 5; // 6 ถึง 11 วินาที
+                const delay = Math.random() * 6; // เหลื่อมเวลา 0 ถึง 6 วินาที
+                
+                b.style.setProperty('--speed', speed + 's');
+                b.style.animationDelay = delay + 's';
+                
                 document.body.appendChild(b);
             }
         }
@@ -388,7 +417,6 @@
         let currentOriginElement = null;
         let emojiInterval = null;
 
-        /* ฟังก์ชันส่งอิโมจิขึ้นลอยทันทีจากด้านล่าง กระจายเต็มความกว้าง */
         function startEmojiBurst() {
             const container = document.getElementById('photo-viewer').style.display === 'flex' ? 
                 document.getElementById('photo-viewer') : document.getElementById('overlay');
@@ -400,10 +428,7 @@
                 el.className = 'pop-emoji';
                 el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
                 
-                // กระจายแนวนอนทั่วจอ 5vw - 95vw
                 el.style.left = (Math.random() * 90 + 5) + 'vw';
-                
-                // สุ่มระยะและทิศทางการลอยเฉียง
                 el.style.setProperty('--x-move', ((Math.random() - 0.5) * 100) + 'px');
                 el.style.setProperty('--rot', ((Math.random() - 0.5) * 360) + 'deg');
                 
@@ -411,7 +436,6 @@
                 setTimeout(() => el.remove(), 2200);
             }
             
-            // ส่งอิโมจิชุดแรกขึ้นทันที ไม่ให้หยุดนิ่ง
             for(let i=0; i<6; i++) {
                 setTimeout(spawn, i * 120);
             }
